@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📖 কুরআন ওয়েবপেজ</title>
+    <title>📖 Quran</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -61,14 +61,18 @@
         }
 
         .arabic {
-            font-size: 24px;
+            font-size: 34px;
             font-weight: bold;
-            color: #333;
+            color: #850303;
         }
 
         .translation {
-            font-size: 18px;
-            color: #555;
+            font-size: 28px;
+            color: #ac380a;
+            font-weight: bold;
+
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
         audio {
@@ -79,9 +83,12 @@
 </head>
 
 <body>
-    <h1>📖 কুরআন ওয়েবপেজ</h1>
+    <a href="index.html" style="text-decoration:none">
+        <h1> আল- কুরআন</h1>
+    </a>
 
-    <label for="surahSelect">✅ সূরা নির্বাচন করুন:</label>
+
+    <label for=" surahSelect"></label>
     <select id="surahSelect"></select>
     <br>
     <button onclick="loadAyahs()">📜 আয়াত লোড করুন</button>
@@ -139,7 +146,7 @@
 
                 ayahDiv.innerHTML = `
                     <p class="arabic">${ayah.text} (${ayah.numberInSurah})</p>
-                    <p class="translation">📖 বাংলা অর্থ: ${translation}</p>
+                    <p class="translation">📖 ${translation}</p>
                 `;
                 ayahDiv.appendChild(audio);
                 ayahContainer.appendChild(ayahDiv);
