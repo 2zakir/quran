@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📖 কুরআন ওয়েবপেজ</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #6dd5ed, #2193b0);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+
+        h1 {
+            color: #ffdd57;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        select,
+        button {
+            padding: 12px;
+            font-size: 16px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        select {
+            background: white;
+            color: black;
+        }
+
+        button {
+            background: #ff5722;
+            color: white;
+        }
+
+        button:hover {
+            background: #e64a19;
+        }
+
+        .ayah-box {
+            background: white;
+            padding: 15px;
+            margin: 15px auto;
+            width: 90%;
+            border-radius: 10px;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+            color: black;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .ayah-box.active {
+            transform: scale(1.05);
+            border: 3px solid #ff5722;
+        }
+
+        .arabic {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .translation {
+            font-size: 18px;
+            color: #555;
+        }
+
+        audio {
+            margin-top: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📖 কুরআন ওয়েবপেজ</h1>
+
+    <label for="surahSelect">✅ সূরা নির্বাচন করুন:</label>
+    <select id="surahSelect"></select>
+    <br>
+    <button onclick="loadAyahs()">📜 আয়াত লোড করুন</button>
+
+    <div id="ayahContainer"></div>
+
+    <script>
+        let surahSelect = document.getElementById("surahSelect");
+        let ayahContainer = document.getElementById("ayahContainer");
+        let audioElements = [];
+
+        async function loadSurahs() {
+            let response = await fetch("https://api.alquran.cloud/v1/surah");
+            let data = await response.json();
+            data.data.forEach(surah => {
+                let option = document.createElement("option");
+                option.value = surah.number;
+                option.textContent = `${surah.number}. ${surah.englishName} (${surah.name})`;
+                surahSelect.appendChild(option);
+            });
+        }
+
+        async function loadAyahs() {
+            let surahNumber = surahSelect.value;
+            ayahContainer.innerHTML = "<p>⏳ লোড হচ্ছে...</p>";
+            let response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-simple,bn.bengali`);
+            let data = await response.json();
+
+            ayahContainer.innerHTML = "";
+            audioElements = [];
+
+            data.data[0].ayahs.forEach((ayah, index) => {
+                let translation = data.data[1].ayahs[index].text;
+                let ayahDiv = document.createElement("div");
+                ayahDiv.classList.add("ayah-box");
+                ayahDiv.id = `ayah-${ayah.number}`;
+
+                let audio = document.createElement("audio");
+                audio.controls = true;
+                audio.src = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`;
+                audio.dataset.index = index;
+
+                audio.addEventListener("play", function () {
+                    document.querySelectorAll(".ayah-box").forEach(box => box.classList.remove("active"));
+                    ayahDiv.classList.add("active");
+                    ayahDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+                });
+
+                audio.addEventListener("ended", function () {
+                    let nextIndex = parseInt(audio.dataset.index) + 1;
+                    if (nextIndex < audioElements.length) {
+                        audioElements[nextIndex].play();
+                    }
+                });
+
+                ayahDiv.innerHTML = `
+                    <p class="arabic">${ayah.text} (${ayah.numberInSurah})</p>
+                    <p class="translation">📖 বাংলা অর্থ: ${translation}</p>
+                `;
+                ayahDiv.appendChild(audio);
+                ayahContainer.appendChild(ayahDiv);
+                audioElements.push(audio);
+            });
+        }
+
+        loadSurahs();
+    </script>
+</body>
+
+</html>
