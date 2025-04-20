@@ -4,101 +4,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📖 Quran</title>
+    <title>📖 Quran Reciter Switch</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            text-align: center;
             background: linear-gradient(to right, #6dd5ed, #2193b0);
-            margin: 0;
-            padding: 20px;
             color: white;
+            text-align: center;
+            padding: 20px;
         }
 
         h1 {
             color: #ffdd57;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         select,
         button {
-            padding: 12px;
-            font-size: 16px;
+            padding: 10px;
             margin: 10px;
-            border: none;
+            font-size: 16px;
             border-radius: 5px;
-            cursor: pointer;
-        }
-
-        select {
-            background: white;
-            color: black;
-        }
-
-        button {
-            background: #ff5722;
-            color: white;
-        }
-
-        button:hover {
-            background: #e64a19;
         }
 
         .ayah-box {
             background: white;
-            padding: 15px;
+            color: black;
             margin: 15px auto;
+            padding: 15px;
             width: 90%;
             border-radius: 10px;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-            color: black;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .ayah-box.active {
-            transform: scale(1.05);
-            border: 3px solid #ff5722;
         }
 
         .arabic {
-            font-size: 34px;
+            font-size: 30px;
             font-weight: bold;
             color: #850303;
         }
 
         .translation {
-            font-size: 28px;
+            font-size: 24px;
             color: #ac380a;
             font-weight: bold;
-
-            padding-left: 10px;
-            padding-right: 10px;
         }
 
         audio {
             margin-top: 10px;
             width: 100%;
         }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(to right, #6dd5ed, #2193b0);
+            padding: 10px;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 
 <body>
-    <a href="index.html" style="text-decoration:none">
-        <h1> আল- কুরআন</h1>
-    </a>
+    <h1>📖 আল-কুরআন রিসাইটারসহ</h1>
 
-
-    <label for=" surahSelect"></label>
-    <select id="surahSelect"></select>
-    <br>
-    <button onclick="loadAyahs()">📜 আয়াত লোড করুন</button>
+    <div class="top-bar">
+        <select id="surahSelect"></select>
+        <select id="reciterSelect"></select>
+        <button onclick="loadAyahs()">📜 আয়াত লোড করুন</button>
+    </div>
 
     <div id="ayahContainer"></div>
 
     <script>
         let surahSelect = document.getElementById("surahSelect");
+        let reciterSelect = document.getElementById("reciterSelect");
         let ayahContainer = document.getElementById("ayahContainer");
         let audioElements = [];
+
+        const reciters = [
+            { name: "আল আফাসি", id: "ar.alafasy" },
+            { name: "হুসারী", id: "ar.husary" },
+            { name: "সুদাইস", id: "ar.abdurrahmaan-as-sudais" },
+            { name: "মিনশাওই", id: "ar.minshawi" },
+            { name: "মাহের মুআইক্লি", id: "ar.mahermuaiqly" },
+            { name: "সাঊদ আশ-শুরাইম", id: "ar.saoodshuraym" },
+            { name: "ইয়াসির আদ-দুসারী", id: "ar.yasserad-dussary" },
+            { name: "আহমদ আল-আজমী", id: "ar.ahmedajamy" },
+            { name: "মুহাম্মাদ আইয়্যুব", id: "ar.muhammadayyoub" },
+            { name: "আবদুল বাসিত (মুরাত্তাল)", id: "ar.basitmurattal" }
+        ];
+
+        function loadReciters() {
+            reciters.forEach(r => {
+                let option = document.createElement("option");
+                option.value = r.id;
+                option.textContent = r.name;
+                reciterSelect.appendChild(option);
+            });
+        }
 
         async function loadSurahs() {
             let response = await fetch("https://api.alquran.cloud/v1/surah");
@@ -113,23 +119,39 @@
 
         async function loadAyahs() {
             let surahNumber = surahSelect.value;
+            let reciterId = reciterSelect.value;
             ayahContainer.innerHTML = "<p>⏳ লোড হচ্ছে...</p>";
+
             let response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-simple,bn.bengali`);
             let data = await response.json();
 
             ayahContainer.innerHTML = "";
             audioElements = [];
 
+            const firstArabicAyah = data.data[0].ayahs[0].text.trim();
+
+            if (parseInt(surahNumber) !== 9) {
+                let bismillahDiv = document.createElement("div");
+                bismillahDiv.classList.add("ayah-box");
+                bismillahDiv.innerHTML = `
+                    <p class="arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+                `;
+                ayahContainer.appendChild(bismillahDiv);
+            }
+
             data.data[0].ayahs.forEach((ayah, index) => {
+                if (index === 0 && firstArabicAyah.startsWith("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ") && parseInt(surahNumber) !== 9) {
+                    return;
+                }
+
                 let translation = data.data[1].ayahs[index].text;
                 let ayahDiv = document.createElement("div");
                 ayahDiv.classList.add("ayah-box");
-                ayahDiv.id = `ayah-${ayah.number}`;
 
                 let audio = document.createElement("audio");
                 audio.controls = true;
-                audio.src = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayah.number}.mp3`;
-                audio.dataset.index = index;
+                audio.src = `https://cdn.islamic.network/quran/audio/128/${reciterId}/${ayah.number}.mp3`;
+                audio.dataset.index = audioElements.length;
 
                 audio.addEventListener("play", function () {
                     document.querySelectorAll(".ayah-box").forEach(box => box.classList.remove("active"));
@@ -152,9 +174,22 @@
                 ayahContainer.appendChild(ayahDiv);
                 audioElements.push(audio);
             });
+
+            // Play the first audio automatically when ayahs are loaded
+            if (audioElements.length > 0) {
+                audioElements[0].play();
+            }
         }
 
+        reciterSelect.addEventListener("change", function () {
+            // Clear the current ayah container and reload the ayahs with the new reciter
+            ayahContainer.innerHTML = "<p>⏳ রিসাইটার আপডেট হচ্ছে...</p>";
+            audioElements = [];
+            loadAyahs();
+        });
+
         loadSurahs();
+        loadReciters();
     </script>
 </body>
 
